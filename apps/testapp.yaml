@@ -5,10 +5,16 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://github.com/rrmavani/argocd-local-repo.git
-    path: manifests/cluster-b/base
-    targetRevision: main  
+  sources:
+    - repoURL: https://github.com/rrmavani/argocd-local-repo.git
+      path: manifests/cluster-b/base
+      targetRevision: main  
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: nginx
+      targetRevision: 13.2.0  # Specify the chart version
+      helm:
+        valueFiles:
+          - $values/manifests/cluster-b/helm/values.yaml
   destination:
     server: https://k3d-cluster-b-serverlb:6443
     namespace: test
