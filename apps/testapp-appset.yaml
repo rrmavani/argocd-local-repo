@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: testapp
+  namespace: argocd
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            argocd.argoproj.io/secret-type: cluster
+  template:
+    metadata:
+      name: '{{name}}-testapp'  
+      namespace: argocd
+    spec:
+      project: default
+      sources:
+        # Source 1: Pre-requisites chart
+        - repoURL: https://github.com/rrmavani/helm-chart-repo.git
+          path: .
+          targetRevision: main
+          helm:
+            valueFiles:
+              - values.yaml
+        # Source 2: External Bitnami Nginx chart
+        - repoURL: https://charts.bitnami.com/bitnami
+          chart: nginx
+          targetRevision: 13.2.0
+          helm:
+            values: |
+              replicaCount: 2
+              service:
+                type: ClusterIP
+                port: 80
+              resources:
+                requests:
+                  memory: "64Mi"
+                  cpu: "250m"
+                limits:
+                  memory: "128Mi"
+                  cpu: "500m"
+      destination:
+        server: '{{server}}'  
+        namespace: test
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
